@@ -50,31 +50,6 @@ A full-stack web application to help students track their campus placement journ
 - JWT Authentication
 - bcrypt
 
----
-
-## Project Structure
-
-
-SMARTPLACEMENTTRACKER/
-│
-├── backend/
-│ ├── controllers/
-│ ├── routes/
-│ ├── middleware/
-│ ├── config/
-│ ├── utils/
-│ ├── server.js
-│
-├── frontend/
-│ ├── src/
-│ ├── components/
-│ ├── pages/
-│ ├── services/
-│
-├── .env (ignored)
-├── package.json
-
-
 
 Create a `.env` file in backend:
 
