@@ -1,32 +1,24 @@
 const pool = require("../config/db");
 const asyncHandler = require("../utils/asyncHandler");
 
+// Get Companies
 const getCompanies = asyncHandler(async (req, res) => {
 
+    const userId = req.user.id;
+
     const page = Number(req.query.page) || 1;
-
     const limit = Number(req.query.limit) || 5;
-
     const offset = (page - 1) * limit;
 
     const search = req.query.search || "";
-
     const sort = req.query.sort || "asc";
 
-    if (
-        sort !== "asc" &&
-        sort !== "desc"
-    ) {
+    if (sort !== "asc" && sort !== "desc") {
         res.status(400);
-        throw new Error(
-            "Sort must be asc or desc"
-        );
+        throw new Error("Sort must be asc or desc");
     }
 
-    const sortOrder =
-        sort === "asc"
-            ? "ASC"
-            : "DESC";
+    const sortOrder = sort === "asc" ? "ASC" : "DESC";
 
     let result;
 
@@ -43,7 +35,7 @@ const getCompanies = asyncHandler(async (req, res) => {
             OFFSET $4
             `,
             [
-                req.user.id,
+                userId,
                 `%${search}%`,
                 limit,
                 offset
@@ -62,7 +54,7 @@ const getCompanies = asyncHandler(async (req, res) => {
             OFFSET $3
             `,
             [
-                req.user.id,
+                userId,
                 limit,
                 offset
             ]
@@ -70,31 +62,31 @@ const getCompanies = asyncHandler(async (req, res) => {
 
     }
 
-    const totalResult =
-        await pool.query(
-            `
-            SELECT COUNT(*) AS total
-            FROM companies
-            WHERE user_id = $1
-            AND company_name ILIKE $2
-            `,
-            [
-                req.user.id,
-                `%${search}%`
-            ]
-        );
+    const totalResult = await pool.query(
+        `
+        SELECT COUNT(*) AS total
+        FROM companies
+        WHERE user_id = $1
+        AND company_name ILIKE $2
+        `,
+        [
+            userId,
+            `%${search}%`
+        ]
+    );
 
     res.send({
         page,
         limit,
         search,
         sort,
-        total: totalResult.rows[0].total,
+        total: Number(totalResult.rows[0].total),
         companies: result.rows
     });
 
 });
 
+// Add Company
 const addCompany = asyncHandler(async (req, res) => {
 
     const {
@@ -106,47 +98,42 @@ const addCompany = asyncHandler(async (req, res) => {
 
     if (!company_name) {
         res.status(400);
-        throw new Error(
-            "Company name required"
-        );
+        throw new Error("Company name required");
     }
 
     if (!role) {
         res.status(400);
-        throw new Error(
-            "Role required"
-        );
+        throw new Error("Role required");
     }
 
-    const result =
-        await pool.query(
-            `
-            INSERT INTO companies
-            (
-                company_name,
-                role,
-                package,
-                deadline,
-                user_id
-            )
-            VALUES
-            (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5
-            )
-            RETURNING *
-            `,
-            [
-                company_name,
-                role,
-                package,
-                deadline,
-                req.user.id
-            ]
-        );
+    const result = await pool.query(
+        `
+        INSERT INTO companies
+        (
+            company_name,
+            role,
+            package,
+            deadline,
+            user_id
+        )
+        VALUES
+        (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5
+        )
+        RETURNING *
+        `,
+        [
+            company_name,
+            role,
+            package,
+            deadline,
+            req.user.id
+        ]
+    );
 
     res.send({
         message: "Company Added",
@@ -155,38 +142,34 @@ const addCompany = asyncHandler(async (req, res) => {
 
 });
 
+// Get Company By ID
 const getCompanyById = asyncHandler(async (req, res) => {
 
     const id = req.params.id;
 
-    const result =
-        await pool.query(
-            `
-            SELECT *
-            FROM companies
-            WHERE id = $1
-            AND user_id = $2
-            `,
-            [
-                id,
-                req.user.id
-            ]
-        );
+    const result = await pool.query(
+        `
+        SELECT *
+        FROM companies
+        WHERE id = $1
+        AND user_id = $2
+        `,
+        [
+            id,
+            req.user.id
+        ]
+    );
 
     if (result.rows.length === 0) {
-
         res.status(404);
-
-        throw new Error(
-            "Company not found"
-        );
-
+        throw new Error("Company not found");
     }
 
     res.send(result.rows[0]);
 
 });
 
+// Update Company
 const updateCompany = asyncHandler(async (req, res) => {
 
     const id = req.params.id;
@@ -198,37 +181,31 @@ const updateCompany = asyncHandler(async (req, res) => {
         deadline
     } = req.body;
 
-    const result =
-        await pool.query(
-            `
-            UPDATE companies
-            SET
-                company_name = $1,
-                role = $2,
-                package = $3,
-                deadline = $4
-            WHERE id = $5
-            AND user_id = $6
-            RETURNING *
-            `,
-            [
-                company_name,
-                role,
-                package,
-                deadline,
-                id,
-                req.user.id
-            ]
-        );
+    const result = await pool.query(
+        `
+        UPDATE companies
+        SET
+            company_name = $1,
+            role = $2,
+            package = $3,
+            deadline = $4
+        WHERE id = $5
+        AND user_id = $6
+        RETURNING *
+        `,
+        [
+            company_name,
+            role,
+            package,
+            deadline,
+            id,
+            req.user.id
+        ]
+    );
 
     if (result.rows.length === 0) {
-
         res.status(404);
-
-        throw new Error(
-            "Company not found"
-        );
-
+        throw new Error("Company not found");
     }
 
     res.send({
@@ -238,37 +215,31 @@ const updateCompany = asyncHandler(async (req, res) => {
 
 });
 
+// Delete Company
 const deleteCompany = asyncHandler(async (req, res) => {
 
     const id = req.params.id;
 
-    const result =
-        await pool.query(
-            `
-            DELETE FROM companies
-            WHERE id = $1
-            AND user_id = $2
-            RETURNING *
-            `,
-            [
-                id,
-                req.user.id
-            ]
-        );
+    const result = await pool.query(
+        `
+        DELETE FROM companies
+        WHERE id = $1
+        AND user_id = $2
+        RETURNING *
+        `,
+        [
+            id,
+            req.user.id
+        ]
+    );
 
     if (result.rows.length === 0) {
-
         res.status(404);
-
-        throw new Error(
-            "Company not found"
-        );
-
+        throw new Error("Company not found");
     }
 
     res.send({
-        message:
-            "Company deleted successfully",
+        message: "Company deleted successfully",
         company: result.rows[0]
     });
 

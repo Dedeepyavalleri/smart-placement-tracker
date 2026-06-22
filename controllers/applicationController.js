@@ -89,6 +89,21 @@ const addApplication = asyncHandler(async (req, res) => {
         throw new Error("Invalid status");
     }
 
+    const companyCheck = await pool.query(
+            `
+            SELECT *
+            FROM companies
+            WHERE id = $1
+            AND user_id = $2
+            `,
+            [company_id, userId]
+        );
+
+            if(companyCheck.rows.length === 0){
+                res.status(404);
+                throw new Error("Company not found");
+    }
+
     const result = await pool.query(
         `
         INSERT INTO applications
@@ -125,6 +140,18 @@ const updateApplication = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
     const { status } = req.body;
+    const validStatuses = [
+    "Applied",
+    "OA Cleared",
+    "Interview Scheduled",
+    "Rejected",
+    "Selected"
+     ];
+
+    if(!validStatuses.includes(status)){
+        res.status(400);
+        throw new Error("Invalid status");
+    }
 
     const result = await pool.query(
         `

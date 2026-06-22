@@ -93,7 +93,10 @@ const registerUser = asyncHandler(async (req, res) => {
         (name,email,password)
         VALUES
         ($1,$2,$3)
-        RETURNING *
+        RETURNING
+        id,
+        name,
+        email
         `,
         [name, email, hashedPassword]
     );
@@ -141,7 +144,7 @@ const loginUser = asyncHandler(async (req, res) => {
         },
         JWT_SECRET,
         {
-            expiresIn: "1h"
+            expiresIn: "7d"
         }
     );
 

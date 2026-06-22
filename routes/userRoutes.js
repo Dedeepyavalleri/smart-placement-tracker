@@ -14,15 +14,15 @@ const {
     getProfile
 } = require("../controllers/userController");
 
-router.get("/users", getUsers);
+router.get("/users", authMiddleware,getUsers);
 
-router.get("/users/:id", getUserById);
+router.get("/users/:id",authMiddleware, getUserById);
 
 router.post("/register", registerUser);
 
-router.put("/users/:id", updateUser);
+router.put("/users/:id", authMiddleware,updateUser);
 
-router.delete("/users/:id", deleteUser);
+router.delete("/users/:id", authMiddleware,deleteUser);
 
 router.post("/login", loginUser);
 
